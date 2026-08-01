@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SAMTRADE">
+  <meta name="format-detection" content="telephone=no">
+  <title>יומן מסחר</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./css/main.css">
+  <script type="module" src="./js/core/theme.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="brand-bars"><i></i><i></i><i></i><i></i></span>
+        </div>
+        <div class="title-wrap">
+          <span class="brand-kicker">SAMTRADE</span>
+          <h1>יומן מסחר חכם</h1>
+          <p>מעקב פוזיציות, תיעוד יומי וניתוח ביצועים במקום אחד</p>
+        </div>
+      </div>
+
+      <div class="auth-box">
+        <span id="authStatus" class="auth-status">לא מחובר</span>
+        <div class="button-row topbar-actions">
+          <button id="themeToggle" class="btn btn-secondary theme-toggle" onclick="toggleTheme()" aria-label="החלפת מצב תצוגה">
+            <span class="theme-icon theme-icon-moon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
+            </span>
+            <span class="theme-icon theme-icon-sun" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>
+            </span>
+            <span id="themeLabel">מצב כהה</span>
+          </button>
+          <button id="authButton" class="btn btn-secondary" onclick="toggleAuth()">התחברות עם Google</button>
+          <button class="btn btn-secondary mobile-secondary-action" onclick="showMarketSettingsModal()">נתוני שוק</button>
+          <button class="btn btn-secondary mobile-secondary-action" onclick="refreshMarketPrices(true)">רענון מחירים</button>
+          <button class="btn btn-secondary" onclick="loadDashboard()">רענון נתונים</button>
+          <button id="openPositionButton" class="btn btn-primary" onclick="showOpenPositionModal()" disabled>פתיחת פוזיציה</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar" aria-label="ניווט ראשי">
+        <button class="nav-button active" data-view-target="dashboard">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+          <span>ראשי</span>
+        </button>
+        <button class="nav-button" data-view-target="portfolio">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 18h18"/><path d="M5 15V9M10 15V5M15 15v-4M20 15V7"/><path d="m4 8 5-4 5 5 6-6"/></svg></span>
+          <span>תמונת מצב</span>
+        </button>
+        <button class="nav-button" data-view-target="market">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17 8 12l4 3 7-9"/><path d="M15 6h4v4"/><path d="M3 21h18"/></svg></span>
+          <span>שוק</span>
+        </button>
+        <button class="nav-button" data-view-target="journal">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12a2 2 0 0 1 2 2v16H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+          <span>יומן</span>
+        </button>
+        <button class="nav-button" data-view-target="statistics">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></span>
+          <span>סטטיסטיקות</span>
+        </button>
+        <button class="nav-button" data-view-target="history">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>
+          <span>היסטוריה</span>
+        </button>
+        <button class="nav-button" data-view-target="settings">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.2.36.55.7 1 .9.34.14.7.2 1.1.2h.1v4h-.1c-.4 0-.76.06-1.1.2-.45.2-.8.54-1 .9Z"/></svg></span>
+          <span>הגדרות</span>
+        </button>
+      </aside>
+
+      <main>
+        <section class="view active" data-view="dashboard">
+          <div class="page-heading dashboard-page-heading">
+            <div class="page-heading-copy">
+              <h2>ראשי</h2>
+              <p>סיכום מהיר של ביצועים ממומשים, פוזיציות פתוחות והתיעוד היומי</p>
+            </div>
+
+            <button
+              id="todayJournalTrigger"
+              class="daily-journal-trigger"
+              type="button"
+              onclick="openTodayJournalModal()"
+              aria-label="פתיחת השאלון היומי"
+            >
+              <span class="daily-journal-date-block">
+                <small>היומן של היום</small>
+                <strong id="todayJournalDateLabel">טוען תאריך</strong>
+              </span>
+              <span id="todayJournalStatus" class="daily-journal-status pending">
+                <span class="daily-journal-status-dot" aria-hidden="true"></span>
+                <span class="daily-journal-status-text">טרם מולא שאלון יומי</span>
+              </span>
+              <span class="daily-journal-trigger-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+              </span>
+            </button>
+          </div>
+
+          <section class="stats-grid">
+            <div class="stat-card stat-card-open">
+              <div class="stat-top">
+                <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17 9 12l4 4 7-9"/><path d="M15 7h5v5"/></svg></span>
+                <span class="stat-pulse">AVG TRADE</span>
+              </div>
+              <div class="stat-content"><div class="stat-label">ממוצע לעסקה סגורה</div><div id="dashboardAvgTrade" class="stat-value">$0.00</div></div>
+            </div>
+            <div class="stat-card stat-card-closed">
+              <div class="stat-top">
+                <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+                <span class="stat-pulse">HISTORY</span>
+              </div>
+              <div class="stat-content"><div class="stat-label">עסקאות סגורות</div><div id="closedCount" class="stat-value">0</div></div>
+            </div>
+            <div class="stat-card stat-card-win">
+              <div class="stat-top">
+                <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
+                <span class="stat-pulse">WIN RATE</span>
+              </div>
+              <div class="stat-content"><div class="stat-label">אחוז הצלחה</div><div id="winRate" class="stat-value">0%</div></div>
+            </div>
+            <div class="stat-card stat-card-pl">
+              <div class="stat-top">
+                <span class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17 9 12l4 4 7-9"/><path d="M15 7h5v5"/></svg></span>
+                <span class="stat-pulse">TOTAL P/L</span>
+              </div>
+              <div class="stat-content"><div class="stat-label">P/L ממומש</div><div id="totalPl" class="stat-value">$0.00</div></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>פוזיציות פתוחות</h2>
+              <div class="market-status">
+                <span id="marketStatusDot" class="market-dot"></span>
+                <span id="marketDataStatus">מחירי שוק לא נטענו</span>
+              </div>
+            </div>
+            <div id="openPositionsContainer" class="table-wrap responsive-trades-table"></div>
+          </section>
+        </section>
+
+        <section class="view" data-view="portfolio">
+          <div class="page-heading portfolio-page-heading">
+            <div>
+              <h2>תמונת מצב נרחבת</h2>
+              <p>רווח ממומש, ביצועי פוזיציות פתוחות ומגמת התיק במסך אחד</p>
+            </div>
+            <div class="portfolio-heading-actions">
+              <span id="portfolioUpdatedAt" class="portfolio-updated-at">ממתין לנתונים</span>
+              <button class="btn btn-secondary" type="button" onclick="refreshPortfolioOverview()">רענון תמונת מצב</button>
+            </div>
+          </div>
+
+          <section class="portfolio-control-panel" aria-label="בחירת תצוגת פוזיציות">
+            <div class="portfolio-mode-copy">
+              <span class="section-kicker">תצוגת נתונים</span>
+              <strong id="portfolioModeTitle">פוזיציות סגורות בלבד</strong>
+              <small id="portfolioModeDescription">המדדים והטבלה מבוססים על תוצאות שמומשו בפועל.</small>
+            </div>
+            <div class="portfolio-segmented-control" role="group" aria-label="מצב תצוגה">
+              <button class="portfolio-mode-button active" type="button" data-portfolio-mode="closed" onclick="setPortfolioMode('closed')">סגורות בלבד</button>
+              <button class="portfolio-mode-button" type="button" data-portfolio-mode="all" onclick="setPortfolioMode('all')">כולל פתוחות</button>
+              <button class="portfolio-mode-button" type="button" data-portfolio-mode="open" onclick="setPortfolioMode('open')">פתוחות בלבד</button>
+            </div>
+          </section>
+
+          <section class="portfolio-metrics-grid">
+            <article class="portfolio-metric-card">
+              <small>רווח ממומש</small>
+              <strong id="portfolioRealizedPl">$0.00</strong>
+              <span>מפוזיציות שנסגרו</span>
+            </article>
+            <article class="portfolio-metric-card">
+              <small>רווח לא ממומש</small>
+              <strong id="portfolioUnrealizedPl">$0.00</strong>
+              <span id="portfolioQuoteCoverage">0 מתוך 0 פוזיציות מתומחרות</span>
+            </article>
+            <article class="portfolio-metric-card portfolio-metric-primary">
+              <small>רווח כולל משוער</small>
+              <strong id="portfolioTotalPl">$0.00</strong>
+              <span>ממומש בתוספת פתוחות</span>
+            </article>
+            <article class="portfolio-metric-card">
+              <small>שווי פוזיציות פתוחות</small>
+              <strong id="portfolioOpenValue">$0.00</strong>
+              <span id="portfolioOpenCost">עלות בסיס $0.00</span>
+            </article>
+            <article class="portfolio-metric-card">
+              <small>פוזיציות פתוחות</small>
+              <strong id="portfolioOpenCount">0</strong>
+              <span>נמצאות כרגע בתיק</span>
+            </article>
+            <article class="portfolio-metric-card">
+              <small>עסקאות סגורות</small>
+              <strong id="portfolioClosedCount">0</strong>
+              <span>נכללות בסטטיסטיקה</span>
+            </article>
+            <article class="portfolio-metric-card">
+              <small>Win Rate</small>
+              <strong id="portfolioWinRate">0%</strong>
+              <span>מחושב מסגורות בלבד</span>
+            </article>
+            <article class="portfolio-metric-card">
+              <small>חשיפה פתוחה</small>
+              <strong id="portfolioExposure">$0.00</strong>
+              <span>לפי שווי השוק הזמין</span>
+            </article>
+          </section>
+
+          <article class="portfolio-chart-card">
+            <div class="portfolio-chart-header">
+              <div>
+                <span class="section-kicker">מגמת התיק</span>
+                <h3>רווח מצטבר לאורך זמן</h3>
+                <p id="portfolioChartSubtitle">הקו הממומש מבוסס על עסקאות סגורות. הקו הכולל נשמר בצילום יומי.</p>
+              </div>
+              <div class="portfolio-chart-legend" role="group" aria-label="קווי הגרף">
+                <button id="portfolioRealizedLegend" class="portfolio-legend-button active" type="button" onclick="togglePortfolioSeries('realized')"><span class="portfolio-legend-line realized"></span>ממומש</button>
+                <button id="portfolioTotalLegend" class="portfolio-legend-button active" type="button" onclick="togglePortfolioSeries('total')"><span class="portfolio-legend-line total"></span><span id="portfolioTotalLegendLabel">כולל פתוחות</span></button>
+              </div>
+            </div>
+            <div id="portfolioTrendChart" class="portfolio-trend-chart"></div>
+            <div class="portfolio-chart-footnote">
+              <span id="portfolioSnapshotStatus">הצילום היומי יישמר לאחר טעינת מחירי השוק.</span>
+              <span>Win Rate ושאר מדדי איכות העסקאות נשארים מבוססי עסקאות סגורות בלבד.</span>
+            </div>
+          </article>
+
+          <section class="panel portfolio-positions-panel">
+            <div class="panel-header portfolio-table-header">
+              <div>
+                <h2 id="portfolioTableTitle">פוזיציות סגורות</h2>
+                <span id="portfolioTableSubtitle">תוצאות שמומשו בפועל</span>
+              </div>
+              <span id="portfolioTableCount">0 פוזיציות</span>
+            </div>
+            <div id="portfolioPositionsContainer" class="table-wrap responsive-trades-table portfolio-table-wrap"></div>
+          </section>
+        </section>
+
+        <section class="view" data-view="market">
+          <div class="page-heading market-page-heading">
+            <div>
+              <h2>נתוני מניות וגרפים</h2>
+              <p>חיפוש מניות, ניתוח טכני ורשימת מעקב במסך אחד</p>
+            </div>
+            <div class="market-heading-badge">
+              <span class="market-heading-dot" aria-hidden="true"></span>
+              <span>גרפים ונתוני שוק</span>
+            </div>
+          </div>
+
+          <div id="marketExplorerRoot" class="market-explorer-root">
+            <section class="market-search-card">
+              <form id="marketSymbolForm" class="market-symbol-form" autocomplete="off">
+                <label class="market-symbol-field" for="marketSymbolInput">
+                  <span>חיפוש טיקר</span>
+                  <input id="marketSymbolInput" name="symbol" type="text" inputmode="text" placeholder="AAPL או NYSE:KO" aria-describedby="marketSearchHelp marketSearchStatus">
+                </label>
+                <label class="market-exchange-field" for="marketExchangeSelect">
+                  <span>בורסה</span>
+                  <select id="marketExchangeSelect" name="exchange">
+                    <option value="AUTO">זיהוי אוטומטי</option>
+                    <option value="NASDAQ">NASDAQ</option>
+                    <option value="NYSE">NYSE</option>
+                    <option value="AMEX">AMEX / ARCA</option>
+                    <option value="TASE">TASE</option>
+                    <option value="LSE">LSE</option>
+                  </select>
+                </label>
+                <button class="btn btn-primary market-search-button" type="submit">הצגת מניה</button>
+              </form>
+              <div class="market-search-foot">
+                <p id="marketSearchHelp">אפשר להחליף נרות, קו, טווחי זמן ואינדיקטורים גם מתוך סרגל הגרף.</p>
+                <span id="marketSearchStatus" class="market-search-status" aria-live="polite">בחר טיקר להצגה</span>
+              </div>
+              <div class="market-quick-list" aria-label="מניות נפוצות">
+                <span>גישה מהירה</span>
+                <button type="button" data-market-open="NASDAQ:AAPL">AAPL</button>
+                <button type="button" data-market-open="NASDAQ:MSFT">MSFT</button>
+                <button type="button" data-market-open="NASDAQ:NVDA">NVDA</button>
+                <button type="button" data-market-open="NASDAQ:TSLA">TSLA</button>
+                <button type="button" data-market-open="AMEX:SPY">SPY</button>
+                <button type="button" data-market-open="NASDAQ:QQQ">QQQ</button>
+              </div>
+            </section>
+
+            <section class="market-summary-grid" aria-label="סיכום נתוני מניה">
+              <article class="market-company-card">
+                <div id="marketCompanyLogo" class="market-company-logo" aria-hidden="true"><span>AA</span></div>
+                <div class="market-company-copy">
+                  <small>המניה הנבחרת</small>
+                  <strong id="marketCompanyName">AAPL</strong>
+                  <span id="marketCompanyMeta">נתוני החברה יוצגו לאחר טעינה</span>
+                </div>
+                <button id="refreshMarketSnapshot" class="market-icon-button" type="button" aria-label="רענון נתוני המניה" title="רענון נתוני המניה">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.7-2.6L20 11M4 13l2.2 4.6A7 7 0 0 0 17.9 15"/></svg>
+                </button>
+              </article>
+              <article class="market-data-card">
+                <small>מחיר אחרון</small>
+                <strong id="marketLastPrice">—</strong>
+                <span>לפי Finnhub</span>
+              </article>
+              <article id="marketDailyChangeCard" class="market-data-card">
+                <small>שינוי יומי</small>
+                <strong id="marketDailyChange">—</strong>
+                <span>סכום ואחוז</span>
+              </article>
+              <article class="market-data-card">
+                <small>טווח יומי</small>
+                <strong id="marketDayRange">—</strong>
+                <span>נמוך עד גבוה</span>
+              </article>
+              <article class="market-data-card market-data-card-secondary">
+                <small>פתיחה</small>
+                <strong id="marketOpenPrice">—</strong>
+              </article>
+              <article class="market-data-card market-data-card-secondary">
+                <small>סגירה קודמת</small>
+                <strong id="marketPreviousClose">—</strong>
+              </article>
+            </section>
+
+            <div class="market-main-grid">
+              <article class="market-chart-card">
+                <div class="market-chart-header">
+                  <div>
+                    <span class="section-kicker">גרף מתקדם</span>
+                    <div class="market-chart-symbol-line">
+                      <h3 id="marketCurrentSymbol">AAPL</h3>
+                      <span id="marketCurrentExchange">NASDAQ</span>
+                    </div>
+                  </div>
+                  <button id="addCurrentToWatchlist" class="btn btn-secondary" type="button">הוספה למעקב</button>
+                </div>
+                <div class="market-chart-help">
+                  <span>נרות וקו</span>
+                  <span>קו מגמה וכלי ציור</span>
+                  <span>ממוצע נע ואינדיקטורים</span>
+                  <span>טווחי זמן והשוואת נכסים</span>
+                </div>
+                <div id="marketChartContainer" class="market-chart-container">
+                  <div class="market-chart-placeholder">הגרף ייטען בפתיחת מסך השוק.</div>
+                </div>
+              </article>
+
+              <aside class="market-side-panel">
+                <section class="market-side-section">
+                  <div class="market-side-title">
+                    <div><span class="section-kicker">Watchlist</span><h3>רשימת מעקב</h3></div>
+                    <span id="marketWatchlistCount">0/20</span>
+                  </div>
+                  <div id="marketWatchlist" class="market-watchlist"></div>
+                </section>
+
+                <section class="market-side-section">
+                  <div class="market-side-title">
+                    <div><span class="section-kicker">Portfolio</span><h3>פוזיציות פתוחות</h3></div>
+                    <span id="marketPositionCount">0</span>
+                  </div>
+                  <div id="marketPositionSymbols" class="market-position-list"></div>
+                </section>
+
+                <section class="market-guide-card">
+                  <h3>איך להשתמש בגרף</h3>
+                  <p>בחלק העליון של הגרף ניתן להחליף טיקר, סוג גרף וטווח זמן. בסרגל הצד נמצאים קו מגמה וכלי ציור, ובכפתור Indicators ניתן להוסיף ממוצעים נעים ואינדיקטורים נוספים.</p>
+                </section>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="journal">
+          <div class="page-heading">
+            <h2>יומן יומי</h2>
+            <p>תיעוד התחושה לפני המסחר והקשר בינה לבין התוצאות בפועל</p>
+          </div>
+
+          <section class="journal-workspace-card">
+            <div class="journal-toolbar">
+              <div>
+                <span class="section-kicker">בחירת תאריך</span>
+                <h3>עריכת רשומה יומית</h3>
+              </div>
+              <div class="journal-date-control">
+                <input id="journalDatePicker" type="date" aria-label="בחירת תאריך ליומן">
+                <button class="btn btn-secondary" type="button" onclick="loadSelectedJournalDate()">טעינת תאריך</button>
+              </div>
+            </div>
+            <div id="journalEditorContainer"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>היסטוריית שאלונים</h2>
+              <span id="journalHistoryCount">0 רשומות</span>
+            </div>
+            <div id="journalHistoryList" class="journal-history-list"></div>
+          </section>
+        </section>
+
+        <section class="view" data-view="statistics">
+          <div class="page-heading">
+            <h2>סטטיסטיקות</h2>
+            <p>ניתוח ביצועים והצלבה בין מצב יומי לעסקאות שנפתחו באותו יום</p>
+          </div>
+
+          <section class="analytics-grid">
+            <article class="metric-card"><small>ממוצע עסקה מנצחת</small><strong id="avgWinner">$0.00</strong></article>
+            <article class="metric-card"><small>ממוצע עסקה מפסידה</small><strong id="avgLoser">$0.00</strong></article>
+            <article class="metric-card"><small>Profit Factor</small><strong id="profitFactor">0.00</strong></article>
+            <article class="metric-card"><small>Expectancy לעסקה</small><strong id="expectancy">$0.00</strong></article>
+          </section>
+
+          <article class="chart-card">
+            <div class="chart-title"><h3>Equity Curve</h3><span>מצטבר לפי עסקאות סגורות</span></div>
+            <div id="equityChart" class="equity-chart"></div>
+          </article>
+
+          <article class="chart-card">
+            <div class="chart-title"><h3>התפלגות עסקאות</h3></div>
+            <div class="distribution">
+              <div class="distribution-item"><small>עסקאות מנצחות</small><strong id="distributionWins">0 עסקאות</strong></div>
+              <div class="distribution-item"><small>עסקאות מפסידות</small><strong id="distributionLosses">0 עסקאות</strong></div>
+            </div>
+          </article>
+
+          <div class="section-divider">
+            <div><span class="section-kicker">ניתוח יומן</span><h3>הקשר בין התחושה לביצועים</h3></div>
+            <p>החישוב משייך לכל רשומה את העסקאות שנפתחו באותו תאריך.</p>
+          </div>
+
+          <section class="analytics-grid journal-metrics-grid">
+            <article class="metric-card"><small>ימים שתועדו</small><strong id="journalDaysCount">0</strong></article>
+            <article class="metric-card"><small>מצב רוח ממוצע</small><strong id="journalMoodAverage">0.00</strong></article>
+            <article class="metric-card"><small>עייפות ממוצעת</small><strong id="journalFatigueAverage">0.00</strong></article>
+            <article class="metric-card"><small>איכות יום ממוצעת</small><strong id="journalDayAverage">0.00</strong></article>
+          </section>
+
+          <article class="chart-card journal-insight-card">
+            <div class="chart-title"><h3>תמונת מצב</h3><span id="journalLinkedDaysLabel">0 ימים מקושרים לעסקאות סגורות</span></div>
+            <div id="journalCorrelationSummary" class="journal-insight-text"></div>
+          </article>
+
+          <section class="correlation-grid">
+            <article class="correlation-card">
+              <small>מצב רוח מול P/L יומי</small>
+              <strong id="moodCorrelation">אין מספיק נתונים</strong>
+              <span id="moodCorrelationMeta">נדרשים ימים עם שאלון ועסקה סגורה</span>
+            </article>
+            <article class="correlation-card">
+              <small>עייפות מול P/L יומי</small>
+              <strong id="fatigueCorrelation">אין מספיק נתונים</strong>
+              <span id="fatigueCorrelationMeta">נדרשים ימים עם שאלון ועסקה סגורה</span>
+            </article>
+            <article class="correlation-card">
+              <small>איכות היום מול P/L יומי</small>
+              <strong id="dayQualityCorrelation">אין מספיק נתונים</strong>
+              <span id="dayQualityCorrelationMeta">נדרשים ימים עם שאלון ועסקה סגורה</span>
+            </article>
+          </section>
+
+          <article class="chart-card">
+            <div class="chart-title journal-analysis-title">
+              <div><h3>ביצועים לפי דירוג</h3><span>השוואה בין דירוג 1 עד 5</span></div>
+              <select id="journalDimensionSelect" class="compact-select" onchange="changeJournalDimension(this.value)" aria-label="בחירת מדד יומן">
+                <option value="mood">מצב רוח</option>
+                <option value="fatigue">עייפות</option>
+                <option value="dayQuality">איכות היום</option>
+              </select>
+            </div>
+            <div id="journalRatingBreakdown" class="rating-breakdown"></div>
+          </article>
+        </section>
+
+        <section class="view" data-view="history">
+          <div class="page-heading"><h2>היסטוריה</h2><p>כל העסקאות שנסגרו והתוצאה בפועל</p></div>
+          <section class="panel">
+            <div class="panel-header">
+              <h2>עסקאות שנסגרו</h2>
+              <span>פוטנציאל מתוכנן מול התוצאה בפועל</span>
+            </div>
+            <div id="closedPositionsContainer" class="table-wrap responsive-trades-table"></div>
+          </section>
+        </section>
+
+        <section class="view" data-view="settings">
+          <div class="page-heading"><h2>הגדרות</h2><p>העדפות תצוגה וחיבורי נתוני שוק</p></div>
+          <div class="settings-list">
+            <div class="setting-row"><div><h3>מצב תצוגה</h3><p>מעבר בין ערכת נושא בהירה לכהה</p></div><button class="btn btn-secondary" onclick="toggleTheme()">החלפת מצב</button></div>
+            <div class="setting-row"><div><h3>Finnhub API</h3><p>ניהול מפתח API לטעינת מחירים חיים</p></div><button class="btn btn-secondary" onclick="showMarketSettingsModal()">הגדרת נתוני שוק</button></div>
+            <div class="setting-row"><div><h3>רענון מחירים</h3><p>טעינה מחודשת של מחירי השוק לפוזיציות פתוחות</p></div><button class="btn btn-secondary" onclick="refreshMarketPrices(true)">רענון מחירים</button></div>
+            <div class="setting-row"><div><h3>רענון נתונים</h3><p>טעינה מחדש של הנתונים מ־Firestore</p></div><button class="btn btn-secondary" onclick="loadDashboard()">רענון עכשיו</button></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" class="loading-overlay"><div class="loader-card">טוען נתונים</div></div>
+  <div id="modalBackdrop" class="modal-backdrop" onclick="handleBackdropClick(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <button class="close-x" onclick="closeModal()" aria-label="סגירה">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div id="modalFooter" class="modal-footer"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="./js/app.js"></script>
+  <script type="module" src="./js/pwa.js"></script>
+</body>
+</html>
